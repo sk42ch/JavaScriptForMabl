@@ -1,0 +1,116 @@
+2 Snippit in the Flow:
+
+1st snippit: 
+Flow Flow Parameters:  flow.trueBlueProfile = {{@_trueBlueProfile}}
+snippit parameters: value =  {{@flow.trueBlueProfile}}
+ */
+function mablJavaScriptStep(mablInputs, callback, value = '{{@flow.trueBlueProfile}}') {
+
+  // will convert the value to the upper case, if it can
+  // otherwise returns the value as it is
+  // let value = mablInputs.variables.flow.trueBlueProfile;
+  try {
+    value = value.toUpperCase().replace(/\s/g, '');
+  } catch (error) {
+    console.error(error);
+  } finally {
+    callback(value);
+  }
+}
+
+
+
+
+2n Snippit: 
+Flow Flow Parameters:  flow.trueBlueProfile = {{@_trueBlueProfile}}
+Snippit Need 2 Parameters:
+1: jsonString = {{@TRUEBLUE_PROFILES}}
+2: trueBlueProfile = {{@trueBlueProfile}}
+/**
+ * Run a small snippet of JavaScript during a mabl flow/journey
+ *
+ * @param {object} mablInputs - Object containing mabl inputs such as variables (mablInputs.variables).
+ *                              Use mablInputs.variables.user for user defined variables
+ *                              (For example myVar may be accessed as mablInputs.variables.user.myVar)
+ *
+ * @param {function} callback - A callback function that must be called to complete
+ *                              the javascript step and provide a value to the following
+ *                              steps of the flow/journey. A return statement from this
+ *                              function call will not provide any results for use
+ *                              in the following steps in this flow or journey.
+ */
+ 
+ 
+var trueBlueProfileDictSet2 = {
+  "TB3_0_PREMOSAIC_1": {
+    "title": "Mr",
+    "firstName": "Tester",
+    "lastName": "UserOne",
+    "email": "testuser10012023_01@mailinator.com",
+    "password": "jetblue123",
+    "ffpNumber": "2178406000",
+    "loyaltyTier": "TrueBlue"
+  },
+    
+  "TRUEBLUE1001": {
+    "title": "Mrs",
+    "firstName": "Mahi",
+    "lastName": "Manchala",
+    "email": "mahi.manchala@gmail.com",
+    "password": "Jetblue4411$$",
+    "ffpNumber": "6023904025",
+    "loyaltyTier": "TrueBlue"
+  }
+}
+function mablJavaScriptStep(mablInputs, callback, jsonString = '{{@TRUEBLUE_PROFILES}}', trueBlueProfile = '{{@trueBlueProfile}}') {
+
+  // enter code here, return result in callback
+  // let trueBlueProfile = mablInputs.variables.user.trueBlueProfile;
+  console.log(`:: TrueBlue Profile: ${trueBlueProfile}`);
+  // let jsonString = mablInputs.variables.user.TRUEBLUE_PROFILES;
+  let result = getTrueBlueProfile(jsonString, trueBlueProfile);
+  if (!result) { // result is null - check in the "TRUEBLUE_PROFILES_SET2"
+    console.log(`:: The given TrueBlueProfile is not found in the ENV VAR "TRUEBLUE_PROFILES" ::`);
+    console.log(`:: Checking in ENV VAR "TRUEBLUE_PROFILES_SET2" ...`);
+    result = getTrueBlueProfile(mablInputs.variables.user.TRUEBLUE_PROFILES_SET2, trueBlueProfile);
+  }
+  if (!result) {
+    console.error(`:: The given TrueBlueProfile: "${trueBlueProfile}" was not found in any of the configured ENV VARs. ::`);
+    // WORK AROUND FOR MABL ISSUE - NOT ABLE TO SAVE/UPDATE EXISTING ENV VAR - 17th Mar' 2023 
+    if (trueBlueProfileDictSet2.hasOwnProperty(trueBlueProfile)) {
+      result = trueBlueProfileDictSet2[trueBlueProfile];
+    }
+  }
+  callback(result);
+}
+
+
+
+/**
+ * Created on 17th Mar' 2023
+ * Searches the given "TrueBlueProfile" in the JSON STRING having the profile details.
+ * @param jsonString - Representing a JSON object containing TrueBlue profile details
+ * @param trueBlueProfile - trueBlueProfile name / id
+ * 
+ * returns null in case the profile is not found in the dict (jsonString)
+ */
+function getTrueBlueProfile(jsonString, trueBlueProfile) {
+  let trueBlueProfileDetails = null; // undefined by default - Will have the trueBlueProfileDetails as an object when a match is found
+  try {
+    let jsonObjTrueBlueProfileDict = JSON.parse(jsonString);
+    if (jsonObjTrueBlueProfileDict.hasOwnProperty(trueBlueProfile)) {
+      trueBlueProfileDetails = jsonObjTrueBlueProfileDict[trueBlueProfile];
+    }
+  } catch (error) {
+    console.error(`:: NGB Booking | Checkout | Select TrueBlue profile: '${trueBlueProfile}' :: `, error);
+  }
+  return trueBlueProfileDetails;
+}
+
+Steps: Echo: "trueBlueProfileDetails: {{@trueBlueProfileDetails}}"
+
+
+
+To Enter TB profile Detials :
+Enter email: {{@trueBlueProfileDetails.email}}
+Enter Password: {{@trueBlueProfileDetails.password}}
